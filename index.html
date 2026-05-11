@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jigyasa Gaurav</title>
+    <meta name="description" content="PhD student in CS&E at University of Minnesota. Bayesian Optimization, Machine Learning.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Outfit:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+    :root {
+        --bg:           #f9f9f7;
+        --bg-sidebar:   #ffffff;
+        --text:         #1a1a1a;
+        --text-muted:   #6b7280;
+        --text-light:   #9ca3af;
+        --accent:       #0d9488;
+        --accent-light: #f0fdfa;
+        --border:       #e5e4df;
+        --divider:      #ececea;
+        --tag-bg:       #f0fdfa;
+        --tag-text:     #0f766e;
+        --sidebar-w:    280px;
+    }
+    [data-theme="dark"] {
+        --bg:           #111110;
+        --bg-sidebar:   #161614;
+        --text:         #eeede8;
+        --text-muted:   #9ca3af;
+        --text-light:   #6b7280;
+        --accent:       #2dd4bf;
+        --accent-light: #0d2926;
+        --border:       #262620;
+        --divider:      #222220;
+        --tag-bg:       #0d2926;
+        --tag-text:     #5eead4;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+        font-family: 'Outfit', sans-serif;
+        background: var(--bg); color: var(--text);
+        line-height: 1.7; font-size: 15.5px;
+        transition: background .3s, color .3s;
+        overflow-x: hidden;
+    }
+
+    /* ── LAYOUT ─────────────────────────────────────── */
+    .layout { display: flex; min-height: 100vh; }
+
+    /* ── SIDEBAR ────────────────────────────────────── */
+    .sidebar {
+        width: var(--sidebar-w); min-width: var(--sidebar-w);
+        background: var(--bg-sidebar); border-right: 1px solid var(--border);
+        position: sticky; top: 0; height: 100vh; overflow-y: auto;
+        display: flex; flex-direction: column; align-items: center;
+        padding: 2.5rem 1.75rem; text-align: center; flex-shrink: 0;
+        transition: background .3s;
+    }
+    .avatar {
+        width: 140px; height: 140px; border-radius: 50%;
+        background: var(--accent-light); border: 2px solid var(--border);
+        display: flex; align-items: center; justify-content: center;
+        margin-bottom: 1.25rem;
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 2.4rem; font-weight: 500; color: var(--accent);
+        flex-shrink: 0; overflow: hidden;
+    }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+    .s-name  { font-family: 'Cormorant Garamond', serif; font-size: 1.45rem; font-weight: 500; line-height: 1.2; color: var(--text); margin-bottom: .3rem; }
+    .s-title { font-size: .78rem; color: var(--text-muted); line-height: 1.6; }
+    .s-inst  { font-size: .78rem; color: var(--accent); font-weight: 500; margin-top: .2rem; margin-bottom: 1.5rem; }
+    .s-div   { width: 100%; border: none; border-top: 1px solid var(--border); margin: .25rem 0 .5rem; }
+    .s-links { width: 100%; display: flex; flex-direction: column; gap: .2rem; }
+    .s-link  {
+        display: flex; align-items: center; gap: .65rem;
+        padding: .45rem .7rem; border-radius: 6px;
+        text-decoration: none; color: var(--text-muted);
+        font-size: .82rem; transition: all .18s;
+    }
+    .s-link:hover { color: var(--accent); background: var(--accent-light); }
+    .s-link .ico {
+        width: 18px; height: 18px;
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0; color: currentColor;
+    }
+    .s-link .ico svg { width: 14px; height: 14px; fill: currentColor; display: block; }
+    .s-bottom { margin-top: auto; padding-top: 1.5rem; width: 100%; }
+    .theme-btn {
+        width: 100%; background: none; border: 1px solid var(--border);
+        border-radius: 6px; padding: .4rem .9rem; cursor: pointer;
+        color: var(--text-muted); font-size: .78rem;
+        font-family: 'Outfit', sans-serif; transition: all .18s;
+    }
+    .theme-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── MAIN ───────────────────────────────────────── */
+    .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+    /* ── TAB NAV ────────────────────────────────────── */
+    .tab-nav {
+        position: sticky; top: 0; z-index: 50;
+        background: rgba(249,249,247,.96);
+        backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+        border-bottom: 1px solid var(--border);
+        padding: 0 3rem; display: flex; overflow-x: auto; scrollbar-width: none;
+        transition: background .3s;
+    }
+    [data-theme="dark"] .tab-nav { background: rgba(17,17,16,.96); }
+    .tab-nav::-webkit-scrollbar { display: none; }
+    .tab-btn {
+        padding: .9rem 1.05rem; background: none; border: none;
+        border-bottom: 2px solid transparent;
+        color: var(--text-light); font-size: .74rem; font-weight: 600;
+        letter-spacing: .07em; text-transform: uppercase;
+        cursor: pointer; white-space: nowrap; transition: all .18s;
+        font-family: 'Outfit', sans-serif;
+    }
+    .tab-btn:hover  { color: var(--accent); }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* ── PANELS ─────────────────────────────────────── */
+    .panels { flex: 1; }
+    .panel  { display: none; padding: 3rem 3.5rem; max-width: 820px; animation: fadeIn .2s ease; }
+    .panel.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ── TYPOGRAPHY ─────────────────────────────────── */
+    .panel-title {
+        font-family: 'Cormorant Garamond', serif;
+        font-size: clamp(1.9rem, 3.5vw, 2.5rem);
+        font-weight: 400; line-height: 1.15;
+        margin-bottom: 1.75rem; color: var(--text);
+    }
+    .panel-title em { font-style: italic; color: var(--accent); }
+    .section-head {
+        font-size: .72rem; font-weight: 700; letter-spacing: .14em;
+        text-transform: uppercase; color: var(--accent);
+        margin: 2.5rem 0 1rem; padding-bottom: .4rem;
+        border-bottom: 1px solid var(--divider);
+    }
+    .section-head:first-child { margin-top: 0; }
+
+    /* ── ABOUT ──────────────────────────────────────── */
+    .about-bio p {
+        font-size: .95rem; color: var(--text-muted);
+        line-height: 1.85; margin-bottom: .9rem;
+    }
+    .about-bio p:last-child { margin-bottom: 0; }
+    .about-bio a { color: var(--accent); text-decoration: none; }
+    .about-bio strong { color: var(--text); font-weight: 600; }
+
+    .about-chat {
+        margin-top: 2.5rem;
+        padding-top: 2rem;
+        border-top: 1px solid var(--divider);
+        font-size: .92rem; color: var(--text-muted);
+        line-height: 1.8;
+    }
+    .about-chat a { color: var(--accent); text-decoration: none; }
+
+    /* interests */
+    .interests-list { list-style: none; display: flex; flex-direction: column; gap: .4rem; }
+    .interests-list li {
+        display: flex; align-items: flex-start; gap: .65rem;
+        font-size: .88rem; color: var(--text-muted);
+    }
+    .interests-list li::before {
+        content: '•'; color: var(--accent);
+        font-size: .9rem; flex-shrink: 0; margin-top: .04rem;
+    }
+
+    /* news */
+    .news-box {
+        max-height: 210px; overflow-y: auto;
+        border: 1px solid var(--border); border-radius: 4px;
+        scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+    }
+    .news-box::-webkit-scrollbar { width: 4px; }
+    .news-box::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    .news-item {
+        display: grid; grid-template-columns: 82px 1fr;
+        gap: .9rem; align-items: baseline;
+        padding: .7rem 1rem; border-bottom: 1px solid var(--divider);
+        font-size: .85rem;
+    }
+    .news-item:last-child { border-bottom: none; }
+    .news-date {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: .68rem; color: var(--accent); font-weight: 500; white-space: nowrap;
+    }
+    .news-text { color: var(--text-muted); line-height: 1.5; }
+    .news-text a { color: var(--accent); text-decoration: none; }
+    .news-text strong { color: var(--text); font-weight: 500; }
+
+    /* ── EXPERIENCE ─────────────────────────────────── */
+    .exp-list { display: flex; flex-direction: column; }
+    .exp-item { padding: 1.5rem 0; border-bottom: 1px solid var(--divider); }
+    .exp-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .exp-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: .15rem; }
+    .exp-header h3 { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; font-weight: 500; color: var(--text); }
+    .exp-place     { font-size: .85rem; color: var(--accent); font-weight: 500; margin-bottom: .2rem; }
+    .exp-work-date { font-family: 'JetBrains Mono', monospace; font-size: .72rem; color: var(--text-light); margin-bottom: .7rem; }
+    .exp-detail    { font-size: .82rem; color: var(--text-muted); }
+
+    .exp-bullets { display: flex; flex-direction: column; gap: .85rem; }
+    .exp-bullet h4 { font-size: .88rem; font-weight: 600; color: var(--text); margin-bottom: .25rem; display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; }
+    .exp-bullet p  { font-size: .83rem; color: var(--text-muted); line-height: 1.65; }
+
+    /* ── TAGS ───────────────────────────────────────── */
+    .tag {
+        font-size: .65rem; padding: .12rem .45rem;
+        background: var(--tag-bg); color: var(--tag-text);
+        border-radius: 3px; font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* ── RESEARCH ───────────────────────────────────── */
+    .research-list { display: flex; flex-direction: column; }
+    .r-item { padding: 1.4rem 0; border-bottom: 1px solid var(--divider); }
+    .r-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .r-header {
+        display: flex; justify-content: space-between;
+        align-items: flex-start; gap: 1.5rem; margin-bottom: .2rem;
+    }
+    .r-header h3 { font-family: 'Cormorant Garamond', serif; font-size: 1.15rem; font-weight: 500; color: var(--text); }
+    .r-meta {
+        font-family: 'JetBrains Mono', monospace; font-size: .7rem;
+        color: var(--text-light); white-space: nowrap;
+        padding-top: .3rem; text-align: right; flex-shrink: 0;
+    }
+    .r-advisor { font-size: .78rem; color: var(--accent); font-weight: 500; margin-bottom: .4rem; }
+    .r-desc    { font-size: .84rem; color: var(--text-muted); line-height: 1.65; }
+    .r-tags    { display: flex; flex-wrap: wrap; gap: .35rem; margin-top: .5rem; }
+
+    /* ── SKILLS ─────────────────────────────────────── */
+    .skills-rows { display: flex; flex-direction: column; }
+    .skill-row {
+        display: grid; grid-template-columns: 150px 1fr;
+        gap: 1.5rem; align-items: baseline;
+        padding: 1rem 0; border-bottom: 1px solid var(--divider);
+    }
+    .skill-row:last-child { border-bottom: none; }
+    .skill-cat-name { font-size: .74rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); }
+    .skill-items { display: flex; flex-wrap: wrap; gap: .4rem; }
+    .skill-pill {
+        font-size: .8rem; padding: .25rem .65rem;
+        border: 1px solid var(--border); border-radius: 50px;
+        color: var(--text-muted); transition: all .18s; cursor: default;
+    }
+    .skill-pill:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── DOT LIST (awards, service) ─────────────────── */
+    .dot-list { display: flex; flex-direction: column; }
+    .dot-item { display: flex; align-items: flex-start; gap: .85rem; padding: 1rem 0; border-bottom: 1px solid var(--divider); }
+    .dot-item:last-child { border-bottom: none; }
+    .dot { color: var(--accent); font-size: .75rem; flex-shrink: 0; margin-top: .35rem; line-height: 1; }
+    .dot-body strong { font-size: .9rem; display: block; color: var(--text); margin-bottom: .15rem; }
+    .dot-body p, .dot-body span { font-size: .83rem; color: var(--text-muted); line-height: 1.55; }
+
+    /* ── TEACHING ───────────────────────────────────── */
+    .teach-list { display: flex; flex-direction: column; }
+    .teach-item {
+        display: grid; grid-template-columns: 130px 1fr;
+        gap: 1.25rem; align-items: start;
+        padding: 1.1rem 0; border-bottom: 1px solid var(--divider);
+    }
+    .teach-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .teach-date  { font-family: 'JetBrains Mono', monospace; font-size: .72rem; color: var(--text-light); padding-top: .15rem; }
+    .teach-body strong { font-size: .9rem; color: var(--text); display: block; margin-bottom: .15rem; }
+    .teach-place { font-size: .82rem; color: var(--accent); font-weight: 500; display: block; }
+    .teach-body p { font-size: .82rem; color: var(--text-muted); margin-top: .2rem; line-height: 1.55; }
+
+    /* ── MOBILE ─────────────────────────────────────── */
+    .mobile-header {
+        display: none; padding: .85rem 1.4rem;
+        background: var(--bg-sidebar); border-bottom: 1px solid var(--border);
+        align-items: center; justify-content: space-between;
+        position: sticky; top: 0; z-index: 100;
+    }
+    .mobile-name { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; font-weight: 500; color: var(--text); }
+    .hamburger   { background: none; border: none; cursor: pointer; color: var(--text); font-size: 1.2rem; }
+
+    @media (max-width: 820px) {
+        .sidebar { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; width: 100%; z-index: 200; }
+        .sidebar.mobile-open { display: flex; }
+        .mobile-header { display: flex; }
+        .panel { padding: 2rem 1.5rem; }
+        .tab-nav { padding: 0 .75rem; }
+        .exp-header { flex-direction: column; gap: .2rem; }
+        .teach-item { grid-template-columns: 1fr; gap: .2rem; }
+        .skill-row  { grid-template-columns: 1fr; gap: .4rem; }
+        .r-header   { flex-direction: column; gap: .15rem; }
+        .r-meta     { text-align: left; }
+        .news-item  { grid-template-columns: 1fr; gap: .15rem; }
+    }
+    </style>
+</head>
+<body>
+
+<div class="mobile-header">
+    <span class="mobile-name">Jigyasa Gaurav</span>
+    <button class="hamburger" id="hamburger">☰</button>
+</div>
+
+<div class="layout">
+
+    <!-- ══ SIDEBAR ══════════════════════════════════════ -->
+    <aside class="sidebar" id="sidebar">
+        <!-- Replace div.avatar with <div class="avatar"><img src="photo.jpg" alt="Jigyasa Gaurav"></div> once you have a photo -->
+        <div class="avatar">JG</div>
+        <div class="s-name">Jigyasa Gaurav</div>
+        <div class="s-title">PhD Student</div>
+        <div class="s-title">Computer Science &amp; Engineering</div>
+        <div class="s-inst">University of Minnesota</div>
+
+        <hr class="s-div">
+
+        <div class="s-links">
+            <!-- Email -->
+            <a href="mailto:gaura012@umn.edu" class="s-link">
+                <span class="ico">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z"/>
+                    </svg>
+                </span>
+                gaura012@umn.edu
+            </a>
+            <!-- LinkedIn -->
+            <a href="https://www.linkedin.com/in/jigyasagaurav/" target="_blank" class="s-link">
+                <span class="ico">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                    </svg>
+                </span>
+                JigyasaGaurav
+            </a>
+            <!-- GitHub -->
+            <a href="https://github.com/JigyasaGaurav" target="_blank" class="s-link">
+                <span class="ico">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+                    </svg>
+                </span>
+                JigyasaGaurav
+            </a>
+            <!-- X / Twitter -->
+            <a href="https://x.com/JigyasaGaurav" target="_blank" class="s-link">
+                <span class="ico">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                    </svg>
+                </span>
+                JigyasaGaurav
+            </a>
+        </div>
+
+        <div class="s-bottom">
+            <button class="theme-btn" id="themeToggle">☾ Dark Mode</button>
+        </div>
+    </aside>
+
+    <!-- ══ MAIN ════════════════════════════════════════ -->
+    <main class="main">
+
+        <nav class="tab-nav">
+            <button class="tab-btn active" data-tab="about">About</button>
+            <button class="tab-btn" data-tab="experience">Experience</button>
+            <button class="tab-btn" data-tab="research">Research</button>
+            <button class="tab-btn" data-tab="skills">Skills</button>
+            <button class="tab-btn" data-tab="awards">Awards</button>
+            <button class="tab-btn" data-tab="service">Service</button>
+            <button class="tab-btn" data-tab="teaching">Teaching</button>
+        </nav>
+
+        <div class="panels">
+
+            <!-- ── ABOUT ─────────────────────────────── -->
+            <div class="panel active" id="tab-about">
+                <h2 class="panel-title">Hi, I'm <em>Jigyasa</em></h2>
+
+                <div class="about-bio">
+                    <p>I am a PhD student in the
+                        <a href="https://cse.umn.edu/cs" target="_blank">Department of Computer Science &amp; Engineering</a>
+                        at the <a href="https://twin-cities.umn.edu/" target="_blank">University of Minnesota, Twin Cities</a>,
+                        advised by <a href="https://aryandeshwal.github.io" target="_blank">Prof. Aryan Deshwal</a>.
+                    </p>
+                    <p>My research focuses on <strong>uncertainty-aware Bayesian optimization</strong> algorithms
+                        for discovering optimal designs in large offline design spaces — with applications in
+                        molecule discovery, protein engineering, and materials design.</p>
+                    <p>My background spans pure mathematics (combinatorics, graph theory, differential topology)
+                        at IIT Bombay and IISc Bangalore, and two years engineering deep learning systems in
+                        computer vision and NLP at V-Labs. Outside research: avid badminton player, former
+                        theater member at IISc's Rangmanch, and enthusiastic teacher.</p>
+                </div>
+
+                <div class="section-head">Research Interests</div>
+                <ul class="interests-list">
+                    <li>Bayesian Optimization &amp; Black-Box Function Optimization</li>
+                    <li>Uncertainty Quantification in Machine Learning</li>
+                    <li>Computer Vision &amp; Natural Language Processing</li>
+                    <li>AI for Scientific Discovery — drug design, materials science, protein engineering</li>
+                    <li>Combinatorics &amp; Graph Theory</li>
+                </ul>
+
+                <div class="section-head">Latest News</div>
+                <div class="news-box">
+                    <!-- ✏️ Add new items here as they happen -->
+                    <div class="news-item">
+                        <span class="news-date">Jan 2025</span>
+                        <span class="news-text">Started PhD in Computer Science &amp; Engineering at the <strong>University of Minnesota, Twin Cities</strong>.</span>
+                    </div>
+                    <div class="news-item">
+                        <span class="news-date">Jan 2025</span>
+                        <span class="news-text">Joined <a href="https://aryandeshwal.github.io" target="_blank">Prof. Aryan Deshwal's</a> lab to work on offline black-box function optimization.</span>
+                    </div>
+                    <div class="news-item">
+                        <span class="news-date">Jul 2024</span>
+                        <span class="news-text">Concluded two years at <strong>V-Labs</strong> as a Deep Learning Engineer in the Computer Vision &amp; NLP team.</span>
+                    </div>
+                </div>
+
+                <div class="about-chat">
+                    I'm always happy to chat about research, collaboration, or anything at the intersection of mathematics and machine learning. Feel free to reach out at <a href="mailto:gaura012@umn.edu">gaura012@umn.edu</a>.
+                </div>
+            </div>
+
+            <!-- ── EXPERIENCE ────────────────────────── -->
+            <div class="panel" id="tab-experience">
+                <h2 class="panel-title">Experience</h2>
+
+                <div class="section-head">Work</div>
+                <div class="exp-list">
+                    <div class="exp-item">
+                        <div class="exp-header">
+                            <h3>Deep Learning Engineer</h3>
+                        </div>
+                        <div class="exp-place">V-Labs (Vijna-Labs) · Computer Vision &amp; NLP Team</div>
+                        <div class="exp-work-date">Jun 2022 — Jul 2024</div>
+                        <div class="exp-bullets">
+                            <div class="exp-bullet">
+                                <h4>Document Extraction using Transformers (DExTr)
+                                    <span class="tag">LLMs</span><span class="tag">Transformers</span><span class="tag">RAG</span>
+                                </h4>
+                                <p>Built a transformer-based enterprise extraction platform using ChatGPT, LLAMA, and Mistral. Improved context-awareness, reduced hallucinations, and automated insurance workflows (NAS, WC, Loss Run).</p>
+                            </div>
+                            <div class="exp-bullet">
+                                <h4>Confidence Score Analysis
+                                    <span class="tag">XGBoost</span><span class="tag">CatBoost</span><span class="tag">Calibration</span>
+                                </h4>
+                                <p>Investigated failure modes of high-accuracy DL models via feature engineering and binary classifiers to identify when predictions are unreliable despite high overall accuracy.</p>
+                            </div>
+                            <div class="exp-bullet">
+                                <h4>First Notice of Loss (FNOL)
+                                    <span class="tag">CLIP</span><span class="tag">TIMM</span>
+                                </h4>
+                                <p>Automated insurance hail-damage assessment from images. Developed end-to-end CLIP pipeline for roof classification, improving accuracy by 13% over prior model.</p>
+                            </div>
+                            <div class="exp-bullet">
+                                <h4>Visual Document Understanding
+                                    <span class="tag">PyTorch</span><span class="tag">Donut</span><span class="tag">DenseNet</span><span class="tag">EasyOCR</span>
+                                </h4>
+                                <p>Pipelines for classifying noisy scanned financial documents and key information extraction using transformer and CNN architectures with OCR and object detection.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-head">Education</div>
+                <div class="exp-list">
+                    <div class="exp-item">
+                        <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:500;margin-bottom:.2rem;">Ph.D. Computer Science &amp; Engineering</h3>
+                        <div class="exp-place">University of Minnesota, Twin Cities</div>
+                        <div class="exp-detail">Advisor: <a href="https://aryandeshwal.github.io" target="_blank" style="color:var(--accent);text-decoration:none;">Prof. Aryan Deshwal</a> · Jan 2025 – Present</div>
+                    </div>
+                    <div class="exp-item">
+                        <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:500;margin-bottom:.2rem;">MPhil, Mathematics</h3>
+                        <div class="exp-place">Indian Institute of Technology Bombay</div>
+                        <div class="exp-detail">Combinatorics &amp; Graph Theory</div>
+                    </div>
+                    <div class="exp-item">
+                        <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:500;margin-bottom:.2rem;">MS Research, Mathematics</h3>
+                        <div class="exp-place">Indian Institute of Science, Bangalore</div>
+                    </div>
+                    <div class="exp-item">
+                        <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:500;margin-bottom:.2rem;">BS Research, Mathematics</h3>
+                        <div class="exp-place">Indian Institute of Science, Bangalore</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── RESEARCH ───────────────────────────── -->
+            <div class="panel" id="tab-research">
+                <h2 class="panel-title">Research &amp; Projects</h2>
+
+                <div class="section-head">Research</div>
+                <div class="research-list">
+                    <div class="r-item">
+                        <div class="r-header">
+                            <h3>Offline Black-Box Function Optimization</h3>
+                            <span class="r-meta">Jan 2025 – Present<br>Univ. of Minnesota</span>
+                        </div>
+                        <div class="r-advisor">Prof. Aryan Deshwal · <a href="https://aryandeshwal.github.io" target="_blank" style="color:var(--accent);text-decoration:none;">University of Minnesota</a></div>
+                        <p class="r-desc">Developing uncertainty-aware Bayesian optimization algorithms for discovering optimal designs in large offline design spaces. Applications in molecule/therapeutic discovery, protein engineering, and material design.</p>
+                    </div>
+                    <div class="r-item">
+                        <div class="r-header">
+                            <h3>Chromatic Number of Hypergraphs</h3>
+                            <span class="r-meta">2021 – 2022<br>Univ. of Maryland</span>
+                        </div>
+                        <div class="r-advisor">Prof. David Harris · University of Maryland, College Park</div>
+                        <p class="r-desc">Explored algorithmic complexity of computing chromatic numbers; analyzed approximation algorithms for maximum independent sets in geometric graphs. Applications in CV, information retrieval, and network routing.</p>
+                    </div>
+                    <div class="r-item">
+                        <div class="r-header">
+                            <h3>Extremal Combinatorics: Ramsey Numbers &amp; Sunflower Lemma</h3>
+                            <span class="r-meta">IIT Bombay</span>
+                        </div>
+                        <div class="r-advisor">Prof. Niranjan Balachandran · IIT Bombay</div>
+                        <p class="r-desc">Studied exponential improvements on lower bounds of diagonal multicolour Ramsey numbers and improved bounds for the sunflower lemma via structured vs. pseudo-random approaches. Applications in circuit complexity and cryptography.</p>
+                    </div>
+                    <div class="r-item">
+                        <div class="r-header">
+                            <h3>Translation Numbers &amp; Quasi-homomorphisms on Automorphisms of the Circle</h3>
+                            <span class="r-meta">IISc Bangalore</span>
+                        </div>
+                        <div class="r-advisor">Prof. Siddhartha Gadgil · IISc Bangalore</div>
+                        <p class="r-desc">Showed translation numbers are conjugacy invariants via quasi-homomorphisms. Studied dynamical invariants on area-preserving diffeomorphisms of the disc from the signature knot invariant.</p>
+                    </div>
+                    <div class="r-item">
+                        <div class="r-header">
+                            <h3>Quasi-homomorphisms and Dynamics</h3>
+                            <span class="r-meta">IISc Bangalore</span>
+                        </div>
+                        <div class="r-advisor">Prof. Siddhartha Gadgil · IISc Bangalore</div>
+                        <p class="r-desc">Studied dynamical invariants on the group of compactly supported area-preserving diffeomorphisms of the open unit disk, derived from the signature knot invariant.</p>
+                    </div>
+                </div>
+
+                <div class="section-head">Course Projects</div>
+                <div class="research-list">
+                    <div class="r-item">
+                        <div class="r-header">
+                            <h3>Object Detection &amp; Classification</h3>
+                            <span class="r-meta">CNN · TensorFlow</span>
+                        </div>
+                        <p class="r-desc">YOLO-based object detection on traffic datasets; mood classifier and sign-language digit recognizer using Keras Sequential and Functional APIs.</p>
+                        <div class="r-tags"><span class="tag">CNN</span><span class="tag">TensorFlow</span><span class="tag">YOLO</span><span class="tag">Keras</span></div>
+                    </div>
+                    <div class="r-item">
+                        <div class="r-header">
+                            <h3>Optimization &amp; Game Theory</h3>
+                            <span class="r-meta">Python · NumPy</span>
+                        </div>
+                        <p class="r-desc">Markov chain web ranker, minimax adversarial search, BFS shortest path, and a logical inference knowledge-base solver.</p>
+                        <div class="r-tags"><span class="tag">Python</span><span class="tag">NumPy</span><span class="tag">Graph Theory</span></div>
+                    </div>
+                    <div class="r-item">
+                        <div class="r-header">
+                            <h3>Election Software</h3>
+                            <span class="r-meta">C++</span>
+                        </div>
+                        <p class="r-desc">Simulates elections using plurality and STV (Droop quota) algorithms with system testing for robustness and process validation.</p>
+                        <div class="r-tags"><span class="tag">C++</span><span class="tag">Algorithms</span><span class="tag">Voting Theory</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── SKILLS ─────────────────────────────── -->
+            <div class="panel" id="tab-skills">
+                <h2 class="panel-title">Skills</h2>
+                <div class="skills-rows">
+                    <div class="skill-row">
+                        <span class="skill-cat-name">Machine Learning</span>
+                        <div class="skill-items">
+                            <span class="skill-pill">Bayesian Optimization</span><span class="skill-pill">Deep Learning</span>
+                            <span class="skill-pill">CNNs</span><span class="skill-pill">Transformers</span>
+                            <span class="skill-pill">LLMs</span><span class="skill-pill">NN Compression</span>
+                        </div>
+                    </div>
+                    <div class="skill-row">
+                        <span class="skill-cat-name">Frameworks</span>
+                        <div class="skill-items">
+                            <span class="skill-pill">PyTorch</span><span class="skill-pill">TensorFlow</span>
+                            <span class="skill-pill">NumPy</span><span class="skill-pill">OpenCV</span>
+                            <span class="skill-pill">XGBoost</span><span class="skill-pill">CLIP</span>
+                        </div>
+                    </div>
+                    <div class="skill-row">
+                        <span class="skill-cat-name">Programming</span>
+                        <div class="skill-items">
+                            <span class="skill-pill">Python</span><span class="skill-pill">C</span>
+                            <span class="skill-pill">C++</span><span class="skill-pill">MATLAB</span>
+                            <span class="skill-pill">Sage</span><span class="skill-pill">LaTeX</span>
+                        </div>
+                    </div>
+                    <div class="skill-row">
+                        <span class="skill-cat-name">Infrastructure</span>
+                        <div class="skill-items">
+                            <span class="skill-pill">Docker</span><span class="skill-pill">Kubernetes</span>
+                            <span class="skill-pill">Docker Swarm</span><span class="skill-pill">Git</span>
+                        </div>
+                    </div>
+                    <div class="skill-row">
+                        <span class="skill-cat-name">Mathematics</span>
+                        <div class="skill-items">
+                            <span class="skill-pill">Combinatorics</span><span class="skill-pill">Graph Theory</span>
+                            <span class="skill-pill">Topology</span><span class="skill-pill">Optimization</span>
+                            <span class="skill-pill">Probability</span>
+                        </div>
+                    </div>
+                    <div class="skill-row">
+                        <span class="skill-cat-name">Languages</span>
+                        <div class="skill-items">
+                            <span class="skill-pill">English</span><span class="skill-pill">Hindi</span>
+                            <span class="skill-pill">Spanish (Elementary)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── AWARDS ─────────────────────────────── -->
+            <div class="panel" id="tab-awards">
+                <h2 class="panel-title">Awards &amp; Honors</h2>
+                <div class="dot-list">
+                    <div class="dot-item">
+                        <span class="dot">•</span>
+                        <div class="dot-body">
+                            <strong>CSIR Junior Research Fellowship (JRF)</strong>
+                            <p>Prestigious national fellowship by the Council of Scientific &amp; Industrial Research, India.</p>
+                        </div>
+                    </div>
+                    <div class="dot-item">
+                        <span class="dot">•</span>
+                        <div class="dot-body">
+                            <strong>INSPIRE Fellowship</strong>
+                            <p>Government of India scholarship for top science students, awarded by the Dept. of Science &amp; Technology.</p>
+                        </div>
+                    </div>
+                    <div class="dot-item">
+                        <span class="dot">•</span>
+                        <div class="dot-body">
+                            <strong>CSIR NET JRF — Qualified</strong>
+                            <p>National eligibility exam for lectureship and PhD positions in India. Qualified twice.</p>
+                        </div>
+                    </div>
+                    <div class="dot-item">
+                        <span class="dot">•</span>
+                        <div class="dot-body">
+                            <strong>GATE — Qualified</strong>
+                            <p>Eligible for scholarship and postgraduate admission to premier research institutes in India. Qualified twice.</p>
+                        </div>
+                    </div>
+                    <div class="dot-item">
+                        <span class="dot">•</span>
+                        <div class="dot-body">
+                            <strong>IISc Open Badminton Championship — Winner</strong>
+                            <p>Won individual and team events at the IISc open badminton championship multiple times.</p>
+                        </div>
+                    </div>
+                    <div class="dot-item">
+                        <span class="dot">•</span>
+                        <div class="dot-body">
+                            <strong>Inter-IIT Badminton Team Member</strong>
+                            <p>Represented IIT Bombay at inter-IIT athletic competitions.</p>
+                        </div>
+                    </div>
+                    <div class="dot-item">
+                        <span class="dot">•</span>
+                        <div class="dot-body">
+                            <strong>Badminton &amp; Table Tennis Medalist</strong>
+                            <p>Medalist in several open tournaments at Vijna-Labs.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── SERVICE ────────────────────────────── -->
+            <div class="panel" id="tab-service">
+                <h2 class="panel-title">Professional Service</h2>
+
+                <div class="section-head">Conference Reviewer</div>
+                <div class="dot-list">
+                    <div class="dot-item">
+                        <span class="dot">•</span>
+                        <div class="dot-body">
+                            <strong>AISTATS 2026</strong>
+                            <p>International Conference on Artificial Intelligence and Statistics.</p>
+                        </div>
+                    </div>
+                    <!-- ✏️ Add more reviewer entries here, e.g.:
+                    <div class="dot-item">
+                        <span class="dot">•</span>
+                        <div class="dot-body">
+                            <strong>NeurIPS 2026</strong>
+                            <p>Neural Information Processing Systems.</p>
+                        </div>
+                    </div>
+                    -->
+                </div>
+
+                <div class="section-head">Event Organization</div>
+                <div class="dot-list">
+                    <div class="dot-item">
+                        <span class="dot">•</span>
+                        <div class="dot-body">
+                            <strong>Organizer · 'Cryptography' at PRAVEGA</strong>
+                            <p>Organised and ran the Cryptography event at PRAVEGA, the annual science &amp; technology festival of the Indian Institute of Science, Bangalore. · 2014</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── TEACHING ───────────────────────────── -->
+            <div class="panel" id="tab-teaching">
+                <h2 class="panel-title">Teaching</h2>
+
+                <div class="section-head">Teaching Assistantships</div>
+                <div class="teach-list">
+                    <div class="teach-item">
+                        <div class="teach-date">Aug – Dec 2020</div>
+                        <div class="teach-body">
+                            <strong>Advanced ODE</strong>
+                            <span class="teach-place">Indian Institute of Technology Bombay</span>
+                        </div>
+                    </div>
+                    <div class="teach-item">
+                        <div class="teach-date">Jan – Mar 2020</div>
+                        <div class="teach-body">
+                            <strong>MA216 Linear Algebra &amp; Calculus</strong>
+                            <span class="teach-place">Indian Institute of Technology Bombay</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-head">Volunteer Instruction</div>
+                <div class="teach-list">
+                    <div class="teach-item">
+                        <div class="teach-date">Jan – Sep 2023</div>
+                        <div class="teach-body">
+                            <strong>Docker in Production &amp; Kubernetes</strong>
+                            <span class="teach-place">Vijna-Labs</span>
+                            <p>Taught container orchestration to engineering team members.</p>
+                        </div>
+                    </div>
+                    <div class="teach-item">
+                        <div class="teach-date">Oct – Dec 2023</div>
+                        <div class="teach-body">
+                            <strong>Python Programming</strong>
+                            <span class="teach-place">Vijna-Labs</span>
+                            <p>Taught Python to annotation team members to build technical proficiency.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /panels -->
+    </main>
+</div><!-- /layout -->
+
+<script>
+    /* Theme */
+    const html = document.documentElement;
+    const themeBtn = document.getElementById('themeToggle');
+    const saved = localStorage.getItem('theme') || 'light';
+    html.setAttribute('data-theme', saved);
+    label(saved);
+    themeBtn.addEventListener('click', () => {
+        const n = html.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        html.setAttribute('data-theme', n); localStorage.setItem('theme', n); label(n);
+    });
+    function label(t) { themeBtn.textContent = t === 'light' ? '☾ Dark Mode' : '☀ Light Mode'; }
+
+    /* Tabs */
+    const btns   = document.querySelectorAll('.tab-btn');
+    const panels = document.querySelectorAll('.panel');
+    function activate(id) {
+        btns.forEach(b   => b.classList.toggle('active', b.dataset.tab === id));
+        panels.forEach(p => p.classList.toggle('active', p.id === 'tab-' + id));
+        history.replaceState(null, '', '#' + id);
+        const b = document.querySelector('.tab-btn[data-tab="' + id + '"]');
+        if (b) b.scrollIntoView({ inline: 'center', behavior: 'smooth', block: 'nearest' });
+    }
+    btns.forEach(b => b.addEventListener('click', () => activate(b.dataset.tab)));
+    const h = location.hash.slice(1);
+    if (h && document.getElementById('tab-' + h)) activate(h);
+
+    /* Mobile sidebar */
+    const hamburger = document.getElementById('hamburger');
+    const sidebar   = document.getElementById('sidebar');
+    hamburger.addEventListener('click', e => { e.stopPropagation(); sidebar.classList.toggle('mobile-open'); });
+    document.addEventListener('click', e => {
+        if (sidebar.classList.contains('mobile-open') && !sidebar.contains(e.target)) sidebar.classList.remove('mobile-open');
+    });
+</script>
+</body>
+</html>
